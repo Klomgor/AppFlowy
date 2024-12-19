@@ -15,6 +15,24 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:universal_platform/universal_platform.dart';
 
+/// The node types that support slash menu.
+final Set<String> supportSlashMenuNodeTypes = {
+  ParagraphBlockKeys.type,
+  HeadingBlockKeys.type,
+
+  // Lists
+  TodoListBlockKeys.type,
+  BulletedListBlockKeys.type,
+  NumberedListBlockKeys.type,
+  QuoteBlockKeys.type,
+  ToggleListBlockKeys.type,
+
+  // Simple table
+  // SimpleTableBlockKeys.type,
+  // SimpleTableRowBlockKeys.type,
+  // SimpleTableCellBlockKeys.type,
+};
+
 /// Build the block component builders.
 ///
 /// Every block type should have a corresponding builder in the map.
@@ -107,6 +125,14 @@ List<OptionAction> _buildOptionActions(BuildContext context, String type) {
     standardActions.addAll([OptionAction.divider, OptionAction.depth]);
   }
 
+  if (SimpleTableBlockKeys.type == type) {
+    standardActions.addAll([
+      OptionAction.divider,
+      OptionAction.setToPageWidth,
+      OptionAction.distributeColumnsEvenly,
+    ]);
+  }
+
   return standardActions;
 }
 
@@ -125,9 +151,14 @@ void _customBlockOptionActions(
     final actions = _buildOptionActions(context, entry.key);
 
     if (UniversalPlatform.isDesktop) {
-      builder.showActions = (node) =>
-          node.parent?.type != TableCellBlockKeys.type &&
-          node.parent?.type != SimpleTableCellBlockKeys.type;
+      builder.showActions = (node) {
+        final parentTableNode = node.parentTableNode;
+        if (node.type != SimpleTableBlockKeys.type && parentTableNode != null) {
+          return false;
+        }
+        return true;
+      };
+
       builder.configuration = builder.configuration.copyWith(
         blockSelectionAreaMargin: (_) => const EdgeInsets.symmetric(
           vertical: 1,
@@ -141,7 +172,7 @@ void _customBlockOptionActions(
         if ((type == HeadingBlockKeys.type ||
                 type == ToggleListBlockKeys.type) &&
             level > 0) {
-          final offset = [14.0, 11.0, 8.0, 6.0, 4.0, 2.0];
+          final offset = [13.0, 11.0, 8.0, 6.0, 4.0, 2.0];
           top += offset[level - 1];
         } else if (type == SimpleTableBlockKeys.type) {
           top += 8.0;
@@ -162,6 +193,7 @@ void _customBlockOptionActions(
                       shouldInsertSlash: false,
                       deleteKeywordsByDefault: true,
                       style: styleCustomizer.selectionMenuStyleBuilder(),
+                      supportSlashMenuNodeTypes: supportSlashMenuNodeTypes,
                     ).handler.call(editorState)
                 : () {},
           ),
@@ -429,10 +461,19 @@ NumberedListBlockComponentBuilder _buildNumberedListBlockComponentBuilder(
         return configuration.textStyle(node);
       },
     ),
-    iconBuilder: (_, node, textDirection) => NumberedListIcon(
-      node: node,
-      textDirection: textDirection,
-    ),
+    iconBuilder: (_, node, textDirection) {
+      TextStyle? textStyle;
+      if (node.isInHeaderColumn || node.isInHeaderRow) {
+        textStyle = configuration.textStyle(node).copyWith(
+              fontWeight: FontWeight.bold,
+            );
+      }
+      return NumberedListIcon(
+        node: node,
+        textDirection: textDirection,
+        textStyle: textStyle,
+      );
+    },
   );
 }
 

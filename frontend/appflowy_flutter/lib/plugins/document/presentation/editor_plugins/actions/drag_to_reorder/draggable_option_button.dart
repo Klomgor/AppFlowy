@@ -25,6 +25,7 @@ class DraggableOptionButton extends StatefulWidget {
   final EditorState editorState;
   final BlockComponentContext blockComponentContext;
   final Map<String, BlockComponentBuilder> blockComponentBuilder;
+
   @override
   State<DraggableOptionButton> createState() => _DraggableOptionButtonState();
 }
@@ -85,6 +86,7 @@ class _DraggableOptionButtonState extends State<DraggableOptionButton> {
       details.globalPosition,
       builder: (context, data) {
         return VisualDragArea(
+          editorState: widget.editorState,
           data: data,
           dragNode: widget.blockComponentContext.node,
         );

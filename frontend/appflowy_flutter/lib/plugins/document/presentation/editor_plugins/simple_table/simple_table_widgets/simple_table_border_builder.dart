@@ -1,6 +1,7 @@
 import 'package:appflowy/plugins/document/presentation/editor_plugins/simple_table/simple_table.dart';
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class SimpleTableBorderBuilder {
   SimpleTableBorderBuilder({
@@ -38,7 +39,13 @@ class SimpleTableBorderBuilder {
     // check if the cell is in the reordering column
     final isReordering = simpleTableContext.isReordering;
 
-    if (isReordering && (isCellInHoveringColumn || isCellInHoveringRow)) {
+    final editorState = context.read<EditorState>();
+    final editable = editorState.editable;
+
+    if (!editable) {
+      return buildCellBorder();
+    } else if (isReordering &&
+        (isCellInHoveringColumn || isCellInHoveringRow)) {
       return buildReorderingBorder();
     } else if (simpleTableContext.isSelectingTable.value) {
       return buildSelectingTableBorder();
@@ -185,12 +192,15 @@ class SimpleTableBorderBuilder {
         simpleTableContext.isReorderingColumn.value.$2 < node.columnIndex;
 
     return Border(
-      top: _buildDefaultBorderSide(),
-      bottom: _buildDefaultBorderSide(),
-      left:
-          isLeftSide ? _buildHighlightBorderSide() : _buildDefaultBorderSide(),
+      top: node.rowIndex == 0
+          ? _buildDefaultBorderSide()
+          : _buildLightBorderSide(),
+      bottom: node.rowIndex + 1 == node.parentTableNode?.rowLength
+          ? _buildDefaultBorderSide()
+          : _buildLightBorderSide(),
+      left: isLeftSide ? _buildHighlightBorderSide() : _buildLightBorderSide(),
       right:
-          isRightSide ? _buildHighlightBorderSide() : _buildDefaultBorderSide(),
+          isRightSide ? _buildHighlightBorderSide() : _buildLightBorderSide(),
     );
   }
 
@@ -216,12 +226,15 @@ class SimpleTableBorderBuilder {
         simpleTableContext.isReorderingRow.value.$2 < node.rowIndex;
 
     return Border(
-      top: isTopSide ? _buildHighlightBorderSide() : _buildDefaultBorderSide(),
-      bottom: isBottomSide
-          ? _buildHighlightBorderSide()
-          : _buildDefaultBorderSide(),
-      left: _buildDefaultBorderSide(),
-      right: _buildDefaultBorderSide(),
+      top: isTopSide ? _buildHighlightBorderSide() : _buildLightBorderSide(),
+      bottom:
+          isBottomSide ? _buildHighlightBorderSide() : _buildLightBorderSide(),
+      left: node.columnIndex == 0
+          ? _buildDefaultBorderSide()
+          : _buildLightBorderSide(),
+      right: node.columnIndex + 1 == node.parentTableNode?.columnLength
+          ? _buildDefaultBorderSide()
+          : _buildLightBorderSide(),
     );
   }
 
