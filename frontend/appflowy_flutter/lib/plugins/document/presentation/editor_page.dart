@@ -122,6 +122,7 @@ class _AppFlowyEditorPageState extends State<AppFlowyEditorPage>
         slashMenuItems,
         shouldInsertSlash: false,
         style: styleCustomizer.selectionMenuStyleBuilder(),
+        supportSlashMenuNodeTypes: supportSlashMenuNodeTypes,
       ).handler(editorState);
 
   AFFocusManager? focusManager;
@@ -143,6 +144,11 @@ class _AppFlowyEditorPageState extends State<AppFlowyEditorPage>
     _initEditorL10n();
     _initializeShortcuts();
 
+    AppFlowyRichTextKeys.partialSliced.addAll([
+      MentionBlockKeys.mention,
+      InlineMathEquationKeys.formula,
+    ]);
+
     indentableBlockTypes.add(ToggleListBlockKeys.type);
     convertibleBlockTypes.add(ToggleListBlockKeys.type);
     slashMenuItems = _customSlashMenuItems();
@@ -156,10 +162,6 @@ class _AppFlowyEditorPageState extends State<AppFlowyEditorPage>
       scrollController: effectiveScrollController,
     );
 
-    // keep the previous font style when typing new text.
-    supportSlashMenuNodeWhiteList.addAll([
-      ToggleListBlockKeys.type,
-    ]);
     toolbarItemWhiteList.addAll([
       ToggleListBlockKeys.type,
       CalloutBlockKeys.type,
